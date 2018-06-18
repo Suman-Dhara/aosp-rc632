@@ -1,0 +1,6 @@
+config	RC632_MOD
+		tristate	"RC632 SPI device controller"
+		default	m
+		depends on MODULES
+		help
+				This is a RC632 device drivre kernel module

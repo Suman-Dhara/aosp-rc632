@@ -1,0 +1,1 @@
+cmd_drivers/rc632/rc632_driver.ko := arm-eabi-ld -EL -r  -T /home/suman-dhara/OKxx18-source-android51/linux/kernel/kernel-3.4.39/scripts/module-common.lds --build-id  -o drivers/rc632/rc632_driver.ko drivers/rc632/rc632_driver.o drivers/rc632/rc632_driver.mod.o
