@@ -1,0 +1,128 @@
+package com.android.server.rc632;
+
+import android.util.Slog;
+import android.content.Context;
+import com.android.server.SystemService;
+
+import android.os.Handler;
+import android.os.RemoteException;
+//import android.rc632.IRc632Service;
+import android.rc632.*;
+
+public class Rc632Service extends SystemService {
+
+    private Context mContext;
+    private IRc632ServiceReceiver receiver;
+    private static final String TAG = "Rc632Service";
+    private static final boolean DEBUG = true;
+	private Handler piccScanHandler;
+	private Runnable piccScanRunnable;
+	
+			
+
+	public Rc632Service(Context context) {
+		super(context);
+		this.mContext	=	context;
+		this.piccScanHandler = new Handler();
+		this.piccScanRunnable = new Runnable() {
+			int temp;
+			public void run() {
+				temp = readEvent_native();
+				if(temp > 0)
+					rc632CallBack(String.valueOf(temp));
+				piccScanHandler.post(this);
+			}
+		};
+		if(DEBUG){
+			Slog.d(TAG, "Build Rc632 service");
+		}
+		publishBinderService(Context.RC632_SERVICE,  new Rc632ServiceWrapper());
+	}
+
+	/* this function call when new Picc detection */
+	private void rc632CallBack(String atqa){
+		if(this.receiver != null){
+			try{
+				this.receiver.onPiccDetect(atqa);
+			}catch(RemoteException e){
+				Slog.d(TAG, "Can't send message to client"+ e.getMessage());
+			}
+			
+		}
+			
+	}
+	
+	void addListener(IRc632ServiceReceiver receiver){
+		Slog.v(TAG, "startListening(receiver)");
+		if (this.receiver == null){
+			this.receiver = receiver;
+			this.piccScanHandler.post(this.piccScanRunnable);
+		}else{
+			if (DEBUG) Slog.v(TAG, "listener already registered for ");
+		}		
+		 
+	}
+	
+	void  removeListener(){
+		if(this.receiver != null){
+			this.receiver = null;
+			this.piccScanHandler.removeCallbacks(this.piccScanRunnable);
+		}
+		
+	}
+	
+	public void onStart() {
+		
+		//this.mNativePointer = initRc632_native();
+		
+	}
+
+	private final class Rc632ServiceWrapper extends IRc632Service.Stub{
+		
+		private VirtualPicc mVirtualPicc;
+		private PiccBlock mBlock;
+		private PiccSector mSector;
+		
+		@Override
+		public void setVirtualPicc(VirtualPicc virtualPicc){
+			
+		}
+		
+		@Override
+		public PiccBlock writeBlock(byte[] data, int sectorIndex, int blockIndexWithinSector, char keyType) {
+			return null;
+		}
+		@Override
+		public PiccBlock readBlock(int sectorIndex, int blockIndexWithinSector, char keyType) {
+			return null;
+		}
+		@Override
+		public PiccSector writeSector(byte[] data, int sectorIndex, char keyType, boolean sectorTrailer) {
+			return null;
+		}
+		@Override
+		public PiccSector readSector(int sectorIndex, char keyType, boolean sectorTrailer) {
+			return null;
+		}
+		
+		
+		@Override
+		public void startListening() {
+			
+		}
+		@Override // Binder call
+		public void stopListening() {
+			
+		}
+	};
+	
+	private long mNativePointer;
+	private static native long initRc632_native();
+	private static native int blockRead_native(byte[] buffer,int start_block_no,int block_count,byte[] read_key, byte key_type);
+	private static native int blockWrite_native(byte[] buffer,int start_block_no,int block_count,byte[] key, byte key_type);
+	private static native int scanOn_native(int poll_interval, int poll_interval_min, int poll_interval_max);
+	private static native int scanOff_native();
+	private static native int readEvent_native();
+}
+
+
