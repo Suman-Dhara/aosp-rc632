@@ -1,0 +1,12 @@
+FOR 4.3" PARALLEL LCD
+.....................
+
+PROBLEM:
+	LCD hardware init by bootloade at boot time and bootloader is in .bin file
+----------------------------------------------------------------------------------
+
+SOLUTION:
+	Init LCD hardware at second time at nxp-fb.c file at probing time. 
+----------------------------------------------------------------------------------
+
+int nxp_fb_dev_enable()--> nxp_soc_disp_device_stat_enable()
